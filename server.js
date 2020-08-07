@@ -43,8 +43,7 @@ http.listen(port, () => {
                 useUnifiedTopology: true,
             }, (error, client) => {
                db = client.db('social_media')
-               if(db)
-                console.log('Database Connected')
+                console.log(error)
            
     
 
