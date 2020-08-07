@@ -34,8 +34,7 @@
 
 <script>
     window.user = null
-    var socketIO = io("http://localhost:3000")
-
+	var socketIO = io("https://dhaval-social-meetup.herokuapp.com")
     const getUser = () => {
         if(localStorage.getItem('accessToken')) {
             var ajax = new XMLHttpRequest()
