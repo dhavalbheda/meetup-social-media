@@ -42,7 +42,8 @@ http.listen(port, () => {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             }, (error, client) => {
-            console.log('Database Created')
+            console.log(error)
+            console.log(client)
            var db = client.db('social_media')
             console.log(db)
            
