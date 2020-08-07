@@ -1,0 +1,84 @@
+<%- include('includes/header') %>
+
+<section>
+    <div class="gap gray-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+
+                        <div class="col-md-3">
+                            <%- include('includes/left-sidebar') %>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="central-meta">
+                                <div class="editing-info">
+
+                                    <h5 class="f-title">
+                                        <i class="ti-info-alt"></i>
+                                        Crate Group
+                                    </h5>
+
+                                    <form onsubmit="return createGroup(this)">
+                                        <div class="form-group">
+                                            <label>Cover Photo</label>
+                                            <input type="file" name="coverPhoto" accept="image/*" required>
+                                            <i class="mtrl-select"></i>
+                                            <br/><br/>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <input type="text" name="name" required>
+                                            <label class="control-label">Group Name</label>
+                                            <i class="mtrl-select"></i>
+                                            <br/><br/>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <textarea rows="4" name="additionalInfo" required></textarea>
+                                            <label class="control-label">Additional Info</label>
+                                            <i class="mtrl-select"></i>
+                                            <br/><br/>
+                                        </div>
+
+                                        <button type="submit" class="mtrl-btn" name="submit">
+                                            <span>Save</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> 
+<script>
+    const createGroup = form => {
+        form.submit.setAttribute('disabled', 'disabled')
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/createGroup', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                form.submit.removeAttribute('disabled')
+
+                var response = JSON.parse(this.responseText)
+                alert(response.message)
+                
+                if(response.status == "success") {
+                    form.name.value = ''
+                    form.additionalInfo.value =''
+                    form.coverPhoto.value =''
+                }
+            }
+        }
+        var formData = new FormData(form)
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData)
+        return false
+    }
+</script>
+<%- include('includes/footer') %>

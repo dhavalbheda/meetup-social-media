@@ -1,0 +1,98 @@
+<%- include ("includes/header") %>
+<section>
+	<div class="feature-photo">
+
+		<figure>
+			<img class="cover-photo" id="cover-photo" style="width: 100%; height: 700px; object-fit: cover;" src="<%= "/" + user.coverPhoto %>">
+		</figure>
+
+		<div class="container-fluid">
+			<div class="row merged">
+				<div class="col-md-2">
+					<div class="user-avatar">
+						<figure>
+
+							<img class="profile-image" id="profile-image" style="width: 100%; height: 150px; object-fit: cover;" src="<%= "/" + user.profileImage %>">
+						</figure>
+					</div>
+				</div>
+				<div class="col-md-10">
+					<div class="timeline-info">
+						<ul>
+							<li class="admin-name">
+								<h5 class="user-name" style="padding-top: 20px; padding-bottom: 20px;">
+                                    <%= user.name %>
+                                </h5>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section>
+	<div class="gap gray-bg">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row" id="page-contents">
+
+						<div class="col-md-3">
+                            <%- include ("includes/left-sidebar") %>
+						</div>
+
+						<div class="col-md-6">
+							<div class="central-meta">
+								<div class="editing-info">
+
+									<h5 class="f-title">
+										<i class="ti-info-alt"></i>
+										Profile
+									</h5>
+                                    
+                                    <h3>Full Name</h3>
+                                    <p><%= user.name %></p>
+
+                                    <br><br>
+
+                                    <h3>Email</h3>
+                                    <p><%= user.email %></p>
+
+                                    <br><br>
+
+                                    <h3>Date of Birth</h3>
+                                    <p><%= user.dob == "" ? "N/A" : user.dob %></p>
+
+                                    <br><br>
+
+                                    <h3>City</h3>
+                                    <p><%= user.city == "" ? "N/A" : user.city %></p>
+
+                                    <br><br>
+
+                                    <h3>Country</h3>
+                                    <p><%= user.country == "" ? "N/A" : user.country %></p>
+
+                                    <br><br>
+
+                                    <h3>About</h3>
+                                    <p><%= user.aboutMe == "" ? "N/A" : user.aboutMe %></p>
+                                    
+								</div>
+							</div>
+						</div>
+
+                        <div class="col-md-3">
+                            <%- include ("includes/right-sidebar") %>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<%- include ("includes/footer") %>

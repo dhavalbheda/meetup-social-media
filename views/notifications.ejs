@@ -1,0 +1,116 @@
+<%- include ("includes/header") %>
+
+<section>
+	<div class="gap gray-bg">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row" id="page-contents">
+
+						<div class="col-md-3">
+							<%- include ("includes/left-sidebar") %>
+						</div>
+
+						<div class="col-md-6">
+
+							<div class="central-meta">
+								<div class="editing-interest">
+									<h5 class="f-title"><i class="ti-bell"></i>All Notifications </h5>
+									<div class="notification-box">
+										<ul id="all-notifications"></ul>
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	var isNotifications = true;
+
+	const showNotifications = () => {
+		var html = "";
+
+		var notifications = window.user.notifications.reverse();
+
+		for (var a = 0; a < notifications.length; a++) {
+            var data = notifications[a];
+            console.log(data)
+			html += '<li>';
+                html += '<figure><img src="' + mainURL + '/' + data.profileImage + '" style="width: 45px; height: 45px; object-fit: cover;"></figure>';
+                html += '<div class="notifi-meta">';
+                    html += '<p>' + data.content + '</p>';
+
+                    var createdAt = new Date(data.createdAt);
+                    var date = createdAt.getDate() + "";
+                    date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear();
+                    date += " " + createdAt.getHours() + ":" + createdAt.getMinutes();
+
+                    html += '<span>' + date + '</span>';
+                    if(data.status == 'pending') {
+                        html += '<a href="javascript:void(0)" data-id="'+data._id+'" data-groupId="'+ data.groupId +'" data-userId="'+ data.userId +'" onclick="rejectRequestJoinGroup(this);" class="add-butn btn-unfriend" style="position: relative; left: 5px;">Reject</a>'
+                        html += '<a href="javascript:void(0)" data-id="'+data._id+'" data-groupId="'+ data.groupId +'" data-userId="'+ data.userId +'" onclick="acceptRequestJoinGroup(this);" class="add-butn" style="position: relative; left: 5px;">Accept</a>'
+                    }
+                html += '</div>';
+			html += '</li>';
+		}
+		document.getElementById("all-notifications").innerHTML = html;
+	}
+
+    const acceptRequestJoinGroup = self => {
+        var ajax = new XMLHttpRequest();
+		ajax.open("POST", "/acceptRequestJoinGroup", true);
+
+		ajax.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var response = JSON.parse(this.responseText);
+
+				if (response.status == "success") {
+                    self.remove()
+                } else {
+					alert(response.message);
+				}
+			}
+		};
+
+		var formData = new FormData();
+        formData.append("accessToken", localStorage.getItem("accessToken"));
+        formData.append('_id', self.getAttribute('data-id'))
+        formData.append('groupId', self.getAttribute('data-groupId'))
+        formData.append('userId', self.getAttribute('data-userId'))
+
+        ajax.send(formData);
+    }
+    const rejectRequestJoinGroup = self => {
+        var ajax = new XMLHttpRequest();
+		ajax.open("POST", "/rejectRequestJoinGroup", true);
+
+		ajax.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var response = JSON.parse(this.responseText);
+
+				if (response.status == "success") {
+                    self.nextElementSibling.remove()
+                    self.remove()
+                } else {
+					alert(response.message);
+				}
+			}
+		};
+
+		var formData = new FormData();
+        formData.append("accessToken", localStorage.getItem("accessToken"));
+        formData.append('_id', self.getAttribute('data-id'))
+        formData.append('groupId', self.getAttribute('data-groupId'))
+        formData.append('userId', self.getAttribute('data-userId'))
+
+        ajax.send(formData);
+    }
+	</script>
+
+<%- include ("includes/footer") %>

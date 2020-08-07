@@ -1,0 +1,274 @@
+<%- include('includes/header') %>
+
+<section>
+	<div class="gap gray-bg">
+		<div class="container-fluid">
+
+			<div class="row">
+				<div class="offset-md-3 col-md-6">
+					<div class="timeline-info">
+						<ul class="nav nav-tabs">
+							<li>
+								<a class="active" data-toggle="tab" href="#people">People</a>
+								<a data-toggle="tab" href="#pages">Pages</a>
+								<a data-toggle="tab" href="#groups">Groups</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row" id="page-contents">
+
+						<div class="col-md-3"></div>
+
+						<div class="col-md-6">
+							<div class="central-meta">
+								<div class="frnds">
+
+									<div class="tab-content">
+										<div class="tab-pane active fade show" id="people">
+											<ul class="nearby-contct" id="search-results"></ul>
+										</div>
+
+										<div class="tab-pane active fade" id="pages">
+											<ul class="nearby-contct" id="search-result-pages"></ul>
+										</div>
+
+										<div class="tab-pane active fade" id="groups">
+											<ul class="nearby-contct" id="search-result-groups"></ul>
+                                        </div>
+                                        
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-3"></div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<input type='hidden' id='query' value="<%= query %>">
+<script>
+    var isSearchResults = true
+
+    const showSearchResults = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/search', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState ==4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    var html = ''
+                    for(var i =0; i < response.data.length; i++){
+                        var data = response.data[i]
+
+                        if(data._id == window.user._id) {
+                            continue
+                        }
+                        var isFriend = false
+                        for(var j = 0; j < window.user.friends.length; j++ ) {
+                            var tempData = window.user.friends[j]
+                            if(tempData._id == data._id) {
+                                isFriend = true
+                                break
+                            }
+                        }
+
+                        html += '<li>';
+							html += '<div class="nearly-pepls">';
+								html += '<figure>';
+                                    html += '<a href='/'>'
+                                        html += '<img src="'+ mainURL+ '/'+ data.profileImage +'">'
+                                    html += '</a>'
+                                html += '</figure>'
+
+                                html += '<div class="pepl-info">';
+									html += '<h4>';
+                                        html += '<a href="/">' + data.name + '</a>'
+                                    html += '</h4>'
+
+                                    if(isFriend) {
+                                        html += '<a href="javascript:void(0)" data-id="'+ data._id+'" onclick="doUnfriend(this);" class="add-butn btn-unfriend">Unfriend</a>'
+                                    }
+                                    else {
+                                        html += '<a href="javascript:void(0)" data-id="'+ data._id +'" onclick="sendFriendRequest(this);" class="add-butn">Add Friend</a>'
+                                    }
+                                html += '</div>'
+                            html += '</div>'
+                        html += '</li>'
+                    }
+                    document.getElementById('search-results').innerHTML = html
+
+                    var html = ''
+                    for(var i =0; i < response.pages.length; i++){
+                        var data = response.pages[i]
+
+                        var isLiked = false;
+                        for (var j = 0; j < window.user.pages.length; j++) {
+                            var tempData = window.user.pages[j]
+                            if(tempData._id.toString() === data._id.toString()) {
+                                isLiked = true
+                                break
+                            }
+                        }
+                        html += '<li>';
+							html += '<div class="nearly-pepls">';
+								html += '<figure>';
+                                    html += '<a href="/">'
+                                        html += '<img src="'+ mainURL+ '/'+ data.coverPhoto +'">'
+                                    html += '</a>'
+                                html += '</figure>'
+
+                                html += '<div class="pepl-info">';
+									html += '<h4>';
+                                        html += '<a href="/">' + data.name + '</a>'
+                                    html += '</h4>'
+
+                                    if(isLiked) {
+                                        html += '<a href="javascript:void(0)" data-id="'+ data._id+'" onclick="toggleLikePage(this);" class="add-butn btn-unfriend">Unlike</a>'
+                                    }
+                                    else {
+                                        html += '<a href="javascript:void(0)" data-id="'+ data._id +'" onclick="toggleLikePage(this);" class="add-butn">Like</a>'
+                                    }
+                                html += '</div>'
+                            html += '</div>'
+                        html += '</li>'
+                    }
+                    document.getElementById('search-result-pages').innerHTML = html
+
+                    var html = ''
+                    console.log(response.groups)
+                    for(var i = 0; i < response.groups.length; i++){
+                        var data = response.groups[i]
+
+                        var isMember = false;
+                        for (var j = 0; j < window.user.groups.length; j++) {
+                            var tempData = window.user.groups[j]
+                            if(tempData._id.toString() === data._id.toString()) {
+                                isMember = true
+                                break
+                            }
+                        }
+                        html += '<li>';
+							html += '<div class="nearly-pepls">';
+								html += '<figure>';
+                                    html += '<a href="/group/'+ data._id+ '">'
+                                        html += '<img src="'+ mainURL+ '/'+ data.coverPhoto +'">'
+                                    html += '</a>'
+                                html += '</figure>'
+
+                                html += '<div class="pepl-info">';
+									html += '<h4>';
+                                        html += '<a href="/group/'+ data._id+ '">' + data.name + '</a>'
+                                    html += '</h4>'
+
+                                    html += '<span>Public Groups</span>'
+                                    html += '<em>'+ data.members.length +' Members</em>'
+                                    
+                                    if(localStorage.getItem('accessToken')) {
+                                        if(isMember) {
+                                            html += '<a href="javascript:void(0)" data-id="'+ data._id+'" onclick="toggleJoinGroup(this);" class="add-butn btn-unfriend">Leave</a>'
+                                        } else {
+                                            html += '<a href="javascript:void(0)" data-id="'+ data._id+'" onclick="toggleJoinGroup(this);" class="add-butn">Join</a>'
+                                        }
+                                    }
+                                html += '</div>'
+                            html += '</div>'
+                        html += '</li>'
+                    }
+                    document.getElementById('search-result-groups').innerHTML = html
+                } else {
+                    alert(response.message)
+                }
+            }
+        }
+        var formData = new FormData()
+        formData.append('query', document.getElementById('query').value)
+        ajax.send(formData)
+    }
+
+    const sendFriendRequest = self => {
+        var _id = self.getAttribute('data-id')
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/sendFriendRequest', true)
+ 
+        ajax.onreadystatechange = function() {
+            if(this.readyState ==4 && this.status == 200) {
+ 
+                var response = JSON.parse(this.responseText)
+                alert(response.message)
+                self.remove()               
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id',_id)
+        ajax.send(formData) 
+    } 
+
+    const toggleLikePage = self => {
+        var _id = self.getAttribute('data-id')
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/toggleLikePage', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    self.className = 'add-butn btn-unfriend'
+                    self.innerHTML = 'Unlike'
+                }
+                if(response.status == 'unliked') {
+                    self.className = 'add-butn'
+                    self.innerHTML = 'Like'
+                }
+                if(response.status == 'error') {
+                    alert(response.message)
+                }
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id',_id)
+        ajax.send(formData) 
+    }
+
+    const toggleJoinGroup = self => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/toggleJoinGroup', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    self.className = 'add-butn btn-unfriend'
+                    self.innerHTML = 'Leave'
+                }
+                if(response.status == 'leaved') {
+                    self.className = 'add-butn'
+                    self.innerHTML = 'Join'
+                }
+                if(response.status == 'error') {
+                    alert(response.message)
+                }
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id',self.getAttribute('data-id'))
+        ajax.send(formData) 
+    }
+</script>
+<%- include('includes/footer') %>

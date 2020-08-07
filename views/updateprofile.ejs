@@ -1,0 +1,196 @@
+<%- include ("includes/header") %>
+
+<section>
+	<div class="feature-photo">
+
+		<figure>
+			<img class="cover-photo" id="cover-photo" style="width: 100%; height: 700px; object-fit: cover;">
+		</figure>
+
+		<form class="edit-phto" id="form-cover-photo" onsubmit="return false;">
+			<i class="fa fa-camera-retro"></i>
+			<label class="fileContainer">
+				Edit Cover Photo
+				<input type="file" accept="image/*" name="coverPhoto" onchange="uploadCoverPhoto();" required />
+			</label>
+		</form>
+
+		<div class="container-fluid">
+			<div class="row merged">
+				<div class="col-md-2">
+					<div class="user-avatar">
+						<figure>
+
+							<img class="profile-image" id="profile-image" style="width: 100%; height: 150px; object-fit: cover;">
+
+							<form class="edit-phto" id="form-upload-image" onsubmit="return false;">
+								<i class="fa fa-camera-retro"></i>
+								<label class="fileContainer">
+									Edit Display Photo
+									<input type="file" accept="image/*" name="profileImage" onchange="uploadImage();" required />
+								</label>
+							</form>
+						</figure>
+					</div>
+				</div>
+				<div class="col-md-10">
+					<div class="timeline-info">
+						<ul>
+							<li class="admin-name">
+								<h5 class="user-name" style="padding-top: 20px; padding-bottom: 20px;"></h5>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	var isUpdateProfile = true;
+
+	const showProfileData = () => {
+		document.querySelector(".cover-photo").setAttribute("src", mainURL + "/" + window.user.coverPhoto);
+		document.querySelector(".profile-image").setAttribute("src", mainURL + "/" + window.user.profileImage);
+		document.querySelector(".user-name").innerHTML = window.user.username
+		document.querySelector(".name").value = window.user.name
+		document.querySelector(".email").value = window.user.email
+		document.querySelector(".dob").value = window.user.dob
+		document.querySelector(".city").value = window.user.city
+		document.querySelector(".country").value = window.user.country
+		document.querySelector(".aboutMe").value = window.user.aboutMe
+	}
+
+	const uploadCoverPhoto= form => {
+		var form = document.getElementById("form-cover-photo");
+		var ajax = new XMLHttpRequest();
+		ajax.open("POST", "/uploadCoverPhoto", true);
+
+		ajax.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+
+				var response = JSON.parse(this.responseText);
+
+				document.getElementById("cover-photo").setAttribute("src", response.data);
+			}
+		};
+
+		var formData = new FormData(form);
+		formData.append("accessToken", localStorage.getItem("accessToken"));
+		ajax.send(formData);
+
+		return false;
+	}
+
+	const uploadImage = form => {
+		var form = document.getElementById("form-upload-image");
+
+		var ajax = new XMLHttpRequest();
+		ajax.open("POST", "/uploadProfileImage", true);
+
+		ajax.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+
+				var response = JSON.parse(this.responseText);
+
+				document.getElementById("profile-image").setAttribute("src", response.data);
+			}
+        };
+        var formData = new FormData(form);
+		formData.append("accessToken", localStorage.getItem("accessToken"));
+		ajax.send(formData);
+
+		return false;
+	}
+
+	const doUpdateProfile = form => {
+		form.submit.setAttribute("disabled","disabled")
+		form.submit.innerHTML = "<span>Loadding...</span>"
+
+		var ajax = new XMLHttpRequest()
+		ajax.open("POST", "/updateProfile", true)
+
+		ajax.onreadystatechange = function () {
+			if(this.readyState == 4 && this.status == 200) {
+				form.submit.removeAttribute("disabled")
+				form.submit.innerHTML = "<span>Save</span>"
+
+				var response = JSON.parse(this.responseText)
+				alert(response.message)
+			}
+		}
+		var formData = new FormData(form)
+		formData.append("accessToken", localStorage.getItem('accessToken'))
+		ajax.send(formData)
+		return true
+	}
+
+</script>
+
+<section>
+	<div class="">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row" id="page-contents">
+						<div class="col-md-3">
+						</div>
+						<div class="col-md-6">
+							<div class="cetral-meta">
+								<div class="editing-info">
+									<h5 class="f-title">
+										<i class="ti-info-alt"></i>
+										Update Profile
+									</h5>
+									<form action="/" onsubmit="return doUpdateProfile(this);">
+										<div class="form-group">
+											<input type="text" required class="name" name="name" />
+											<label class="control-label">Full Name</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<br/><br/>
+										<div class="form-group">
+											<input type="email" class="email"/>
+											<label class="control-label">Email</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<br/><br/>
+										<div class="form-group">
+											<input type="text" class="dob" name="dob" placeholder="DD/MM/YYYY"/>
+											<label class="control-label">DOB</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<br/><br/>
+										<div class="form-group">
+											<input type="text" class="city" name="city"/>
+											<label class="control-label">City</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<br/><br/>
+										<div class="form-group">
+											<input type="text" class="country" name="country" />
+											<label class="control-label">Contry</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<br/><br/>
+										<div class="form-group">
+											<textarea rows="4"  class="aboutMe" name="aboutMe" ></textarea>
+											<label class="control-label">About Me</label>
+											<i class="mtrl-select"></i>
+										</div>
+										<button type="submit" class="mtrl-btn" name="submit">
+											<span>Save</span>
+										</button>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<%- include ("includes/footer") %>

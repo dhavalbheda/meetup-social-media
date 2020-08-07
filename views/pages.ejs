@@ -1,0 +1,73 @@
+<%- include('includes/header') %>
+
+<section>
+    <div class="gap gray-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+
+                        <div class="col-md-3">
+                            <%- include('includes/left-sidebar') %>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="central-meta">
+                                <div class="groups">
+                                    <span><i class="fa fa-file-text-o"></i>
+                                        Your Liked Pages
+                                    </span>
+                                </div>
+                                <ul class="liked-pages" id="all-pages"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> 
+
+<script>
+    var isPages = true
+    const getPages = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getPages', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'error') {
+                    alert(response.message)
+                    return
+                }
+                var html = ''
+                for(var i = 0; i < response.data.length; i++) {
+                    var data = response.data[i]
+                    html += '<li>'
+                        html += '<div class="f-page">'
+                            html += '<figure>'
+                                html += '<a href="/page/'+ data._id +'">'
+                                    html += '<img src="'+mainURL+'/'+data.coverPhoto+'" style="width:250px; height: 183px; object-fit: cover;"/>'
+                                html += '</a>'
+                                html += '<em>' + data.likers.length + 'likes</em>'
+                            html += '</figure>'
+
+                            html += '<div class="page-infos">'
+                                html += '<h5><a href="/page/'+ data._id +'">' + data.name + '</a></h5>'
+                                html += '<span>' + data.additionalInfo + '</span>'
+                            html += '</div>'
+                        html += '</div>'
+                    html += '</li>'
+                }
+                document.getElementById('all-pages').innerHTML = html
+            }
+        }
+
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData)
+    }
+</script>
+<%- include('includes/footer') %>

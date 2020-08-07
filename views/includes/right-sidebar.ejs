@@ -1,0 +1,65 @@
+<aside class="sidebar static">
+	<div class="widget">
+		<h4 class="widget-title">Your pages</h4>
+
+		<div id="my-pages"></div>
+
+	</div>
+</aside>
+<script>
+    var isRightSidebar = true
+    const getMyPages = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getMyPages', true)
+ 
+        ajax.onreadystatechange = function() {
+            if(this.readyState ==4 && this.status == 200) {
+ 
+                var response = JSON.parse(this.responseText)
+                var html = ''
+                for(var i = 0; i< response.data.length; i++) {
+                    var data = response.data[i]
+                    console.log(data)
+                    html += '<div class="your-page">'
+                        html += '<figure>'
+                            html += '<a href="/page/'+ data._id +'">'
+                                html += '<img src="'+ mainURL + '/' + data.coverPhoto +'">'
+                            html += '</a>'
+                        html += '</figure>'
+                                
+                        html += '<div class="page-meta">'
+                            html += '<a href="/page/'+ data._id + '" class="underline">'+ data.name +'</a>'
+                        html += '</div>'
+
+                        html += '<div class="page-likes">'
+                            html += '<ul class="nav nav-tabs likes-btn">'
+                                html += '<li class="nav-item" style="width: 100%">'
+                                    html += '<a class="active" href="#page-likes" data-toggle="tab">likes</a>'
+                                html += '</li>'
+                            html += '</ul>'
+                            
+                            html += '<div class="tab-content">'
+                                html += '<div class="tab-pane active fade show" id="page-likes">'
+                                    html += '<span><i class="ti-heart"></i>' + data.likers.length + '</span>'
+                                    
+                                    html += '<div class="users-thumb-list">'
+                                        for(var j = 0; j < data.likers.length; j++){
+                                            var liker = data.likers[j]
+                                            html += '<a data-toggle="tooltip">'
+                                                html += '<img src="' + mainURL + '/' + liker.profileImage + '" style="width: 32px; height: 32px; object-fit: cover;">'
+                                            html += '</a>'
+                                        }
+                                    html += '</div>'
+                                html += '</div>'
+                            html += '</div>'
+                        html += '</div>'
+                    html += '</div>'
+                }
+                document.getElementById('my-pages').innerHTML = html
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData) 
+    }
+</script>

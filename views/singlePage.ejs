@@ -1,0 +1,199 @@
+<%- include('includes/header') %>
+
+<section>
+    <div class="feature-photo">
+        <figure>
+            <img id='page-cover-photo'>
+        </figure>
+        
+        <div class="add-btn">
+            <span id="page-likes"></span>
+            <a href="" onclick="toggleLikePage(this)" id="btn-toggle-like"></a>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row merged">
+
+                <div class="col-lg-10 col-sm-9">
+                    <div class="timeline-info">
+                        <ul>
+                            <li class="admin-name">
+                                <h5 style="padding: 25px" id="page-name"></h5>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section>
+    <div class="gap gray-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+                        <div class="col-md-3">
+                            <%- include('includes/left-sidebar') %>
+                        </div>
+
+                        <div class="col-md-6">
+                            
+                            <div id="add-post-box">
+
+                            </div>
+                            <div class="loadMore" id="newsfeed">
+                                
+                            </div>
+                        
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<input type="hidden" id="_id" value="<%= _id%>">
+<script>
+    var isPageDetail = true
+
+    const getPageDetail = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getPageDetail', true)
+
+        ajax.onreadystatechange = function() {
+            if( this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                var isLiked = false
+                for(var i = 0; i< response.data.likers.length; i++) {
+                    var liker = response.data.likers[i]
+
+                    if(liker._id.toString() == window.user._id.toString()) {
+                        isLiked = true
+                        break
+                    }
+                }
+
+                if(isLiked) {
+                    document.getElementById('btn-toggle-like').innerHTML = 'Unlike'
+                } else {
+                    document.getElementById('btn-toggle-like').innerHTML = 'Like'
+                }
+                document.getElementById('page-cover-photo').setAttribute('src', mainURL + "/" + response.data.coverPhoto)
+                document.getElementById('page-likes').innerHTML = response.data.likers.length + " likes"
+                document.getElementById('page-name').innerHTML = response.data.name
+                
+                if(response.data.user._id.toString() == window.user._id.toString()) {
+                    showAddPost()
+                }
+                var html = ''
+                response.posts = response.posts.reverse()
+                for (let i = 0; i < response.posts.length; i++) {
+                    const data =response.posts[i];
+                    
+                    html += '<div class="central-meta item">'
+                        html += '<div class="user-post">'
+                            html += '<div class="friend-info">'
+                                html += '<figure>'
+                                    html += '<img src="'+ mainURL + "/"+ data.user.profileImage + '">'  
+                                html += '</figure>'
+                                html += '<div class="friend-name">'
+                                    html += '<ins>'
+                                            html += data.user.name
+                                    html += '</ins>'
+
+                                    var createdAt = new Date(data.createdAt)
+                                    var date = createdAt.getDate() + ""
+                                    date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear()
+                                    
+                                    html += '<span>Published: '+ date +'</span>' 
+                                html += '</div>'
+                                html += '<div class="post-meta">'
+                                    html += '<div class="description">'
+                                        html += '<p>'
+                                            html += data.caption
+                                        html += '</p>'
+                                    html += '</div>'
+                                    if(data.image != "") {
+                                        html += '<img src="'+ mainURL + "/"+ data.image +'">'
+                                    }
+                                    if(data.video != "") {
+                                        html += '<video style="height:359px; width:100%" controls src="'+ mainURL + "/"+ data.video +'"></video>'
+                                    }
+                                    html += createLikeSection(data) 
+                                 html += '</div>'
+                            html += '</div>'
+                            html += createCommentSection(data)
+                        html += '</div>'
+                    html += '</div>'
+                }
+                document.getElementById('newsfeed').innerHTML = html
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', document.getElementById('_id').value)
+        ajax.send(formData)
+    }
+
+    const doPost = form => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/addPost', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+                
+                if(response.status === 'success') {
+                    
+                    document.getElementById('form-add-post').querySelector("input[name='image']").value = ''
+                    document.getElementById('form-add-post').querySelector("input[name='video']").value = ''
+                    document.getElementById('form-add-post').querySelector("textarea[name='caption']").value = ''
+                    
+                    document.getElementById("post-img-preview").style.display = "none"
+                    document.getElementById("post-video-preview").style.display = "none"
+                    getPageDetail()
+                } else {
+                    alert(response.message)
+                }
+            }
+        }
+        form.type.value = 'page_post'
+
+        var formData = new FormData(form)
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', document.getElementById('_id').value)
+        ajax.send(formData)
+        return false
+    }
+
+    const toggleLikePage = self => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/toggleLikePage', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    self.innerHTML = 'Unlike'
+                }
+                if(response.status == 'unliked') {
+                    self.innerHTML = 'Like'
+                }
+                if(response.status == 'error') {
+                    alert(response.message)
+                }
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', document.getElementById('_id').value)
+        ajax.send(formData) 
+    }
+</script>
+<%- include('includes/footer') %>

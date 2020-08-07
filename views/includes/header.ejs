@@ -1,0 +1,351 @@
+<html>
+    <head>
+        <title>Meet UP</title>
+
+        <link rel="stylesheet" href="/public/css/main.min.css">
+        <link rel="stylesheet" href="/public/css/style.css">
+        <link rel="stylesheet" href="/public/css/color.css">
+        <link rel="stylesheet" href="/public/css/responsive.css">
+    </head>
+    <body> 
+        <%
+            months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        %>
+        <div class="theme-layout">
+            <div class="topbar stick">
+                <a href="/">
+                    <img src="/public/img/logo.png">
+                </a>
+            </div>
+            <div class="top-area">
+                <ul class="main-menu" id="main-menu">
+
+                </ul>
+                <ul class="setting-area">
+                    <li>
+                        <a href="#">
+                            <i class="ti-search"></i>
+                        </a>
+                        <div class="searched">
+                            <form onsubmit="return false;" class="form-search">
+                                <input type="type" placeholder="Search Friend">
+                                <button data-ripple type="button" onclick="onSearch(this);">
+                                    <i class="ti-search"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <script>
+            var mainURL = "http://localhost:3000"
+            var  months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            const showAddPost = () => {
+                 if(localStorage.getItem('accessToken')) {
+                    var html = ""
+                    html += '<div class="central-meta">' 
+                        html += '<div class="new-postbox">' 
+                            html += '<figure>' 
+                               html += '<img src="'+mainURL + '/' + window.user.profileImage + '">'
+                            html += '</figure>'
+                            html += '<div class="newpst-input">'
+                                html += '<form method="post" id="form-add-post" onsubmit="return doPost(this)">'
+                                    html += '<input name="type" type="hidden" value="post">' 
+                                    html += '<textarea row="2" name="caption" placeholder="write something"></textarea>'
+                                    html += '<div class="attachments">';
+                                        html += '<ul>'
+                                            html += '<li>'
+                                                html += '<img id="post-img-preview" style="display:none">'
+                                            html += '</li>'
+                                            html += '<li>'
+                                                html += '<video id="post-video-preview" controls style="display: none;"></video>'
+                                            html += '</li>'
+                                            html += '<li>'
+                                                html += '<i class="fa fa-image"></i>'
+                                                html += '<label class="fileContainer">'
+                                                    html += '<input type="file" name="image" accept="image/*" onchange="previewPostImage(this);">'
+                                                html += '</label>'
+                                            html += '</li>'
+                                            html += '<li>'
+                                                html += '<i class="fa fa-video-camera"></i>'
+                                                html += '<label class="fileContainer">'
+                                                    html += '<input type="file" name="video" accept="video/*" onchange="previewPostVideo(this);">'
+                                                html += '</label>'
+                                            html += '</li>'
+                                            html += '<li>'
+                                                html += '<button type="submit">Post</button>'
+                                            html += '</li>'
+                                        html += '</ul>'
+                                    html += '</div>'
+                                html += '</form>'
+                            html += '</div>'
+                        html += '</div>'
+                    html += '</div>'
+                    document.getElementById('add-post-box').innerHTML = html
+                 }
+             }
+            
+            const previewPostImage = self => {
+                var file = self.files
+                if(file.length > 0) {
+                    var fileReader = new FileReader()
+                    fileReader.onload = (event) => {
+                        document.getElementById('post-img-preview').style.display = ""
+                        document.getElementById("post-img-preview").setAttribute("src", event.target.result)
+                    }
+                    fileReader.readAsDataURL(file[0])
+                }
+            }
+
+            const previewPostVideo = self => {
+                var file = self.files;
+				if (file.length > 0) {
+					var fileReader = new FileReader();
+
+					fileReader.onload = function (event) {
+						document.getElementById("post-video-preview").style.display = "";
+						document.getElementById("post-video-preview").setAttribute("src", event.target.result);
+					};
+					fileReader.readAsDataURL(file[0]);
+                }
+             } 
+             
+            const createLikeSection = data => {
+                var isLiked = false
+                for (var i=0; i < data.likers.length; i++) {
+                    var likers = data.likers[i]
+                    if(likers._id == window.user._id) {
+                        isLiked = true
+                        break
+                    }
+                }
+                var html = ''
+                html += '<div class="we-video-info">'
+                    html += '<ul>'
+                        html += '<li>'
+                            var className = isLiked?'like':'none'
+                            html += '<span class="'+ className +'" onclick="toggleLikePost(this);" data-id="'+data._id+'">'
+                                html += '<i class="ti-thumb-up"></i>'
+                                html += '<ins>'+ data.likers.length +'</ins>'
+                            html += '</span>'
+                        html += '</li>'
+                        html += '<li>'
+                            html += '<span class="comment" title="Comments">'
+                                html += '<i class="fa fa-comments-o"></i>'
+                                html += '<ins>'+data.comments.length+'</ins>'
+                            html += '</span>'
+                        html += '</li>'
+                        html += '<li>'
+                            html += '<span class="share" onclick="sharePost(this);" data-id="'+data._id+'">'
+                                html += '<i class="ti-share"></i>'
+                                html += '<ins>'+ data.shares.length +'</ins>'
+                            html += '</span>'
+                        html += '</li>'
+                    html += '</ul>'
+                html += '</div>'
+                return html
+            }
+            
+            const toggleLikePost = self => {
+                var _id = self.getAttribute('data-id')
+                var ajax = new XMLHttpRequest()
+                ajax.open('POST', '/toggleLikePost', true)
+
+                ajax.onreadystatechange = function()  {
+                    if(this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText)
+                        if(response.status == "success") {
+                            self.className = 'like'
+                            var likes = parseInt(self.querySelector('ins').innerHTML)
+                            likes++
+                            self.querySelector('ins').innerHTML = likes
+                        }
+                        if(response.status == 'unliked') {
+                            self.className = 'none'
+
+                            var likes = parseInt(self.querySelector('ins').innerHTML)
+                            likes--
+                            self.querySelector('ins').innerHTML = likes
+                        }
+                        if(response.status == 'error') {
+                            alert(response.message)
+                        }
+                    }
+                }
+                var formData = new FormData()
+                formData.append('accessToken', localStorage.getItem('accessToken'))
+                formData.append('_id',_id)
+                ajax.send(formData)
+            }
+            
+            const createCommentSection = data => {
+                html = ''
+                html += '<div class="coment-area">';
+					html += '<ul class="we-comet" style="max-height: 300px; overflow-y: scroll;">';
+
+					data.comments = data.comments.reverse();
+					for (var i = 0; i < data.comments.length; i++) {
+						var comment = data.comments[i];
+
+						html += '<li>';
+							html += '<div class="comet-avatar">';
+								html += '<img src="' + mainURL + '/' + comment.user.profileImage + '">';
+							html += '</div>';
+
+							html += '<div class="we-comment">';
+								html += '<div class="coment-head">';
+									html += '<h5><a href="/">' + comment.user.name + '</a></h5>';
+
+									var createdAt = new Date(comment.createdAt);
+									var date = createdAt.getDate() + "";
+									date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear();
+
+									html += '<span>' + date + '</span>';
+									html += '<a class="we-reply" href="javascript:void(0);" data-post-id="' + data._id + '" data-comment-id="' + comment._id + '" onclick="prepareToReply(this);" title="Reply"><i class="fa fa-reply"></i></a>';
+								html += '</div>';
+
+								html += '<p>' + comment.comment + '</p>';
+							html += '</div>';
+
+							html += '<ul>';
+
+								comment.replies = comment.replies.reverse();
+
+								for (var c = 0; c < comment.replies.length; c++) {
+									var reply = comment.replies[c];
+
+									html += '<li>';
+										html += '<div class="comet-avatar">';
+											html += '<img src="' + mainURL + '/' + reply.user.profileImage + '">';
+										html += '</div>';
+
+										html += '<div class="we-comment">';
+											html += '<div class="coment-head">';
+												html += '<h5><a href="/">' + reply.user.name + '</a></h5>';
+
+												var createdAt = new Date(reply.createdAt);
+												var date = createdAt.getDate() + "";
+												date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear();
+
+												html += '<span>' + date + '</span>';
+											html += '</div>';
+											html += '<p>' + reply.reply + '</p>';
+										html += '</div>';
+									html += '</li>';
+								}
+								html += '</ul>';
+
+						html += '</li>';
+					}
+					html += '</ul>';
+
+					html += '<ul class="we-comet">';
+						html += '<li class="post-comment">';
+							html += '<div class="comet-avatar">';
+								html += '<img src="' + mainURL + '/' + window.user.profileImage + '">';
+							html += '</div>';
+							html += '<div class="post-comt-box">';
+								html += '<form method="post" onsubmit="return doPostComment(this);">';
+									html += '<input type="hidden" name="_id" value="' + data._id + '">';
+									html += '<textarea name="comment" placeholder="Post your comment"></textarea>';
+									html += '<button type="submit">Post</button>';
+								html += '</form>';
+							html += '</div>';
+						html += '</li>';
+					html += '</ul>';
+
+				html += '</div>';
+
+				return html;
+			}
+            
+            const doPostComment = form => {
+                var ajax = new XMLHttpRequest()
+                ajax.open('POST', '/postComment', true)
+
+                ajax.onreadystatechange = function () {
+                    if(this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText)
+
+                        if(response.status == "success") {
+                            form.comment.value = ""
+                        }
+                    }
+                }
+                var formData = new FormData(form)
+                formData.append('accessToken', localStorage.getItem('accessToken'))
+                ajax.send(formData)
+                return false
+            }
+            
+            const prepareToReply = self => {
+                $("#replyModal input[name='postId']").val(self.getAttribute("data-post-id"))
+                $("#replyModal input[name='commentId']").val(self.getAttribute("data-comment-id"))
+                $("#replyModal").modal("show")
+            }
+           
+            const doPostReply = form => {
+                var ajax = new XMLHttpRequest()
+                ajax.open('POST', '/postReplay', true)
+
+                ajax.onreadystatechange = function () {
+                    if(this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText)
+                        if(response.status == "success") {
+                            form.reply.value = ""
+                            $("#replyModal").modal('hide')
+                        } else {
+                            alert(response.message)
+                        }
+                    }
+                }
+                var formData = new FormData(form)
+                formData.append('accessToken', localStorage.getItem('accessToken'))
+                ajax.send(formData)
+                return false
+            }
+            
+            const sharePost = self => {
+                if(confirm('You Want To Share....')) {
+                    var _id = self.getAttribute('data-id')
+                    var ajax = new XMLHttpRequest()
+                    ajax.open('POST', '/sharePost', true)
+
+                    ajax.onreadystatechange = function() {
+                        if(this.readyState == 4 && this.status == 200) {
+                            var response = JSON.parse(this.responseText)
+                            
+
+                            if(response.status == 'success') {
+                                self.className ='like'
+
+                                var shares = parseInt(self.querySelector('ins').innerHTML)
+                                shares++
+                                self.querySelector('ins').innerHTML = shares
+                                showNewsfeed()
+                            } else {
+                                alert(response.message)
+                            }
+                        }
+                    }
+                    var formData = new FormData()
+                    formData.append('accessToken', localStorage.getItem('accessToken'))
+                    formData.append('_id',_id)
+                    ajax.send(formData)
+                }
+            }
+            
+            const onSearch = button => {
+                window.location.href = '/search/'+button.previousElementSibling.value
+            }
+          </script>
+        <style>
+            #post-img-preview,
+            #post-video-preview {
+                height:300px;
+                width:300px;
+                object-fit: cover;
+            }
+        </style> 

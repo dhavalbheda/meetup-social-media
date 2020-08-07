@@ -1,0 +1,78 @@
+<html>
+    <head>
+        <title>Meet UP</title>
+
+        <link rel="stylesheet" href="/public/css/main.min.css">
+        <link rel="stylesheet" href="/public/css/style.css">
+        <link rel="stylesheet" href="/public/css/color.css">
+        <link rel="stylesheet" href="/public/css/responsive.css">
+    </head>
+    <body>
+        <div class="theme-layout">
+            <div class="container-fluid pdng0">
+                <div class="row merged">
+                    <dov class="offset-md-3 col-md-6">
+                        <div class="login-reg-bg">
+                            <div class="log-reg-area sign">
+                                <h2 class="log-title">Sign IN</h2>
+
+                                <form onsubmit="return doLogin(this);">
+                                    <div class="form-group">
+                                        <input type="email" required name="email"/>
+                                        <label class="control-label">Email</label>
+                                        <i class="mtrl-select"></i>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" required name="password"/>
+                                        <label class="control-label">Password</label>
+                                        <i class="mtrl-select"></i>
+                                    </div>
+                                    <a href="/signup">Don't Have An Account</a>
+                                    <div class="submit-btns">
+                                        <button class="mtr-btn signup" name="submit" type="submit">
+                                            <span>Login</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </dov>
+                </div>
+            </div>
+        </div>
+        <script>
+            function doLogin(form) {
+                // form.submit.setAttribute("disabled", "disabled")
+                form.submit.innerHTML = "<span> Loadding... </span>"
+
+                var ajax = new XMLHttpRequest()
+                ajax.open("POST", "/login", true)
+
+                ajax.onreadystatechange = function () {
+                    if(this.readyState == 4 && this.status == 200) {
+                        form.submit.removeAttribute("disabled")
+                        form.submit.innerHTML = "<span>Login</span>"
+                        
+                        var response = JSON.parse(this.responseText)
+                        alert(response.message)
+
+                        if(response.status == "success") {
+                            var accessToken = response.accessToken
+                            localStorage.setItem("accessToken", accessToken)
+                            if(response.profileImage == "")
+                                window.location.href = '/updateProfile'
+                            else    
+                                window.location.href = '/'
+                        } else {
+                            alert(response.message)
+                        }
+
+                    }
+                }
+
+                ajax.send(new FormData(form))
+                return false
+            }
+        </script>
+    </body>
+</html>

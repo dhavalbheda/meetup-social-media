@@ -1,0 +1,101 @@
+<%- include('includes/header') %>
+
+<section>
+    <div class="gap gray-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+
+                        <div class="col-md-3">
+                            <%- include('includes/left-sidebar') %>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="central-meta">
+                                <div class="editing-interest">
+                                    <h5 class="f-title"><i class="ti-bell"></i>All Groups</h5>
+                                    <div class="notification-box">
+                                        <ul id="all-groups"> </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> 
+<script>
+var isGroups = true
+
+    const getGroups = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getGroups', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'error') {
+                    alert(response.message)
+                    return
+                }
+                var html = ''
+                for(var i = 0; i < response.data.length; i++) {
+                    var data = response.data[i]
+                    html += '<li>'
+                        html += '<div class="nearly-pepls">'
+                            html += '<figure>'
+                                html += '<a href="/group/'+ data._id +'">'
+                                    html += '<img src="'+mainURL+'/'+data.coverPhoto+'" style="width: 100px; height: 70px; object-fit: cover;"/>'
+                                html += '</a>'
+                            html += '</figure>'
+
+                            html += '<div class="pepl-info">'
+                                html += '<h4><a href="/group/'+ data._id +'">' + data.name + '</a></h4>'
+                                html += '<span>Public Group</span>'
+                                html += '<em>' + data.members.length + ' Members</em>' 
+                                html += '<a href="javascript:void(0);" data-id="'+ data._id + '" onClick="toggleJoinGroup(this);" class="add-butn btn-unfriend">Leave</a>'
+                            html += '</div>'
+                        html += '</div>'
+                    html += '</li>'
+                }
+                document.getElementById('all-groups').innerHTML = html
+            }
+        }
+
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData)
+    }
+    const toggleJoinGroup = self => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/toggleJoinGroup', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    self.className = 'add-butn btn-unfriend'
+                    self.innerHTML = 'Leave'
+                }
+                if(response.status == 'leaved') {
+                    self.className = 'add-butn'
+                    self.innerHTML = 'Join'
+                }
+                if(response.status == 'error') {
+                    alert(response.message)
+                }
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id',self.getAttribute('data-id'))
+        ajax.send(formData) 
+    }
+</script>
+
+<%- include('includes/footer') %>

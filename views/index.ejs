@@ -1,0 +1,116 @@
+<%- include ("includes/header") %>
+
+<section>
+    <div class="gap gap-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+                        <div class="col-md-3">
+                            <%- include("includes/left-sidebar")%>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="add-post-box" id="add-post-box"></div>
+                            <div class="loadMore" id="newsfeed">
+
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <%- include ("includes/right-sidebar") %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    var isHomePage = true
+    const doPost = (form) => {
+                var ajax = new XMLHttpRequest()
+                ajax.open('POST', '/addPost', true)
+                ajax.onreadystatechange = function() {
+                    if(this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText)
+                        
+                        if(response.status == "success") {
+                            document.getElementById("form-add-post").querySelector("input[name='image']").value = ""
+                            document.getElementById("form-add-post").querySelector("input[name='video']").value = ""
+                            document.getElementById("form-add-post").querySelector("textarea[name='caption']").value = ""
+                            document.getElementById("post-img-preview").style.display = "none"
+                            document.getElementById("post-video-preview").style.display = "none"
+                            showNewsfeed()
+                        } else {
+                            alert(response.message)
+                        }
+                    }
+                }
+                var formData = new FormData(form)
+                formData.append("accessToken",localStorage.getItem('accessToken'))
+                ajax.send(formData)
+                return false
+            }
+    
+    const showNewsfeed = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open("POST", '/getNewsfeed', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+                var html = ""
+
+                for (var a = 0; a < response.data.length; a++) {
+                    var data = response.data[a]
+                    if(data.type == 'group_post')
+                        url = 'group'
+                    else if(data.type == 'page_post')
+                        url = 'page'
+                    else 
+                        url = 'user'
+                    html += '<div class="central-meta item">'
+                        html += '<div class="user-post">'
+                            html += '<div class="friend-info">'
+                                html += '<figure>'
+                                    html += '<img src="'+ mainURL + "/"+ data.user.profileImage + '" style="width:45px; height:45px; object-fit:cover;">'  
+                                html += '</figure>'
+                                html += '<div class="friend-name">'
+                                    html += '<ins>'
+                                        html += '<a href="/'+url+'/' + data.user._id+ '">'
+                                            html += data.user.name
+                                        html += '</a>'
+                                    html += '</ins>'
+
+                                    var createdAt = new Date(data.createdAt)
+                                    var date = createdAt.getDate() + ""
+                                    date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear()
+                                    
+                                    html += '<span>Published: '+ date +'</span>' 
+                                html += '</div>'
+                                html += '<div class="post-meta">'
+                                    html += '<p>'
+                                        html += data.caption
+                                    html += '</p>'
+                                    if(data.image != "") {
+                                        html += '<img src="'+ mainURL + "/"+ data.image +'">'
+                                    }
+                                    if(data.video != "") {
+                                        html += '<video style="height:359px; width:100%" controls src="'+ mainURL + "/"+ data.video +'"></video>'
+                                    }
+                                    html += createLikeSection(data) 
+                                 html += '</div>'
+                            html += '</div>'
+                            html += createCommentSection(data)
+                        html += '</div>'
+                    html += '</div>'
+                }
+                document.getElementById("newsfeed").innerHTML = html
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData)
+    }   
+</script>
+
+<%- include ("includes/footer") %>

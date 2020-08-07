@@ -1,0 +1,172 @@
+<%- include('includes/header') %>
+
+<section>
+    <div class="feature-photo">
+        <figure>
+            <img id='group-cover-photo'>
+        </figure>
+        
+        <div class="add-btn">
+            <span id="group-members"></span>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row merged">
+
+                <div class="col-md-9">
+                    <div class="timeline-info">
+                        <ul>
+                            <li class="admin-name">
+                                <h5 style="padding: 25px" id="group-name"></h5>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section>
+    <div class="gap gray-bg">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row" id="page-contents">
+                        <div class="col-md-3">
+                            <%- include('includes/left-sidebar') %>
+                        </div>
+
+                        <div class="col-md-6">
+                            
+                            <div id="add-post-box">
+
+                            </div>
+                            <div class="loadMore" id="newsfeed">
+                                
+                            </div>
+                        
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<input type="hidden" id="_id" value="<%= _id%>">
+<script>
+    var isGroupDetail = true
+
+    const getPageDetail = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getGroupDetail', true)
+
+        ajax.onreadystatechange = function() {
+            if( this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+                console.log(response)
+                document.getElementById('group-cover-photo').setAttribute('src', mainURL + "/" + response.data.coverPhoto)
+                document.getElementById('group-members').innerHTML = response.data.members.length + " member"
+                document.getElementById('group-name').innerHTML = response.data.name
+                
+                var isMember = false
+                for(var i = 0; i< response.data.members.length; i++) {
+                    var member = response.data.members[i]
+
+                    if(member._id.toString() == window.user._id.toString()) {
+                        isMember = true
+                        break
+                    }
+                }
+
+                if(isMember) {
+                    showAddPost()
+                }
+
+                var html = ''
+                response.posts = response.posts.reverse()
+                for (let i = 0; i < response.posts.length; i++) {
+                    const data =response.posts[i];
+                    
+                    html += '<div class="central-meta item">'
+                        html += '<div class="user-post">'
+                            html += '<div class="friend-info">'
+                                html += '<figure>'
+                                    html += '<img src="'+ mainURL + "/"+ data.user.profileImage + '">'  
+                                html += '</figure>'
+                                html += '<div class="friend-name">'
+                                    html += '<ins>'
+                                            html += '<a href="/user/'+ data.uploader._id +'">'
+                                              html += data.uploader.name
+                                            html += '</a>'
+                                    html += '</ins>'
+
+                                    var createdAt = new Date(data.createdAt)
+                                    var date = createdAt.getDate() + ""
+                                    date = date.padStart(2, "0") + " " + months[createdAt.getMonth()] + ", " + createdAt.getFullYear()
+                                    
+                                    html += '<span>Published: '+ date +'</span>' 
+                                html += '</div>'
+                                html += '<div class="post-meta">'
+                                    html += '<div class="description">'
+                                        html += '<p>'
+                                            html += data.caption
+                                        html += '</p>'
+                                    html += '</div>'
+                                    if(data.image != "") {
+                                        html += '<img src="'+ mainURL + "/"+ data.image +'">'
+                                    }
+                                    if(data.video != "") {
+                                        html += '<video style="height:359px; width:100%" controls src="'+ mainURL + "/"+ data.video +'"></video>'
+                                    }
+                                    html += createLikeSection(data) 
+                                 html += '</div>'
+                            html += '</div>'
+                            html += createCommentSection(data)
+                        html += '</div>'
+                    html += '</div>'
+                }
+                document.getElementById('newsfeed').innerHTML = html
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', document.getElementById('_id').value)
+        ajax.send(formData)
+    }
+
+    const doPost = form => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/addPost', true)
+
+        ajax.onreadystatechange = function() {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status === 'success') {
+                    
+                    document.getElementById('form-add-post').querySelector("input[name='image']").value = ''
+                    document.getElementById('form-add-post').querySelector("input[name='video']").value = ''
+                    document.getElementById('form-add-post').querySelector("textarea[name='caption']").value = ''
+                    
+                    document.getElementById("post-img-preview").style.display = "none"
+                    document.getElementById("post-video-preview").style.display = "none"
+                    getPageDetail()
+                } else {
+                    alert(response.message)
+                }
+            }
+        }
+        form.type.value = 'group_post'
+
+        var formData = new FormData(form)
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', document.getElementById('_id').value)
+        ajax.send(formData)
+        return false
+    }
+
+</script>
+<%- include('includes/footer') %>

@@ -1,0 +1,191 @@
+<%- include ("includes/header") %>
+
+<section>
+	<div class="gap gray-bg">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row" id="page-contents">
+
+						<div class="col-md-3">
+							<%- include ("includes/left-sidebar") %>
+						</div>
+
+						<div class="col-md-6">
+							<div class="central-meta">
+								<div class="messages">
+                                    <h5 class="f-title">
+                                        <i class="ti-bell"></i>
+                                        All Messages
+                                        <span class="more-options">
+                                            <i class="fa fa-ellipsis-h"></i>
+                                        </span>
+                                    </h5>
+                                    <div class="message-box">
+                                        <ul class="peoples" id="friends"></ul>
+                                        <div class="peoples-mesg-box">
+                                            <div class="conversation-head" id="conversation-head"></div>
+                                            
+                                            <ul class="chatting-area" id="chatting-area"></ul>
+
+                                            <div class="message-text-container">
+                                                <form method="POST" onsubmit="return doSendMessage(this)">
+                                                    <textarea name="message"></textarea>
+                                                    <button title="send">
+                                                        <i class="fa fa-paper-plane"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<Script>
+    var isFriends = true;
+    var selectedFriend = null;
+    var friends = []
+
+    const showFriends = () =>{
+        var html = ""
+        friends = window.user.friends
+        
+        for (var a = 0; a< window.user.friends.length; a++) {
+            var data= window.user.friends [a];
+        
+            if (data.status == "pending") 
+                continue
+
+            html += '<li data-id="'+data._id+'" onclick="friendSelected(this)">'
+                html += '<figure>'
+                    html += '<img src="'+ mainURL + '/'+ data.profileImage +'">'
+                html += '</figure>'
+                
+                html += '<div class="people-name">'
+                    html += '<span>'+ data.name +'</span>'
+                html += '</div>'
+            html += '</div>'
+        }
+        document.getElementById('friends').innerHTML = html
+        connectSocket()
+    }
+
+    const friendSelected = self => {
+        var _id = self.getAttribute('data-id')
+        var index = friends.findIndex(friend => {
+            return friend._id == _id
+        })
+        selectedFriend = friends[index]
+
+        var html = ""
+        html += '<figure>'
+            html += '<img src="' + mainURL + '/' + selectedFriend.profileImage +  '">'
+        html += '</figure>'
+
+        html += '<span>' + selectedFriend.name + '</span>'
+        document.getElementById('conversation-head').innerHTML = html
+        
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/getFriendsChat', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                var html = ''
+                for (var i = 0; i < response.data.length; i++) {
+                    var inbox = response.data[i]
+
+                    if(inbox.from == window.user._id) {
+                        html += '<li class="me">'
+                            html += '<p>' + inbox.message + '</p>'
+                        html += '</li>'
+                    } else {
+                        html += '<li class="you">'
+                            html += '<p>' + inbox.message + '</p>'
+                        html += '</li>'
+                    }
+                }
+                document.getElementById('chatting-area').innerHTML = html
+                var objDiv = document.getElementById('chatting-area')
+                objDiv.scrollTop = objDiv.scrollHeight
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', _id)
+        ajax.send(formData)
+        return false
+    }
+
+    const doSendMessage = form => {
+        if(selectedFriend == null) {
+            return false;
+        }
+        var message = form.message.value
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/sendMessage', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                if(response.status == 'success') {
+                    var html = ''
+                    html += '<li class="me">'
+                        html += '<p>' + message + '</p>'
+                    html += '</li>'
+
+                    document.getElementById('chatting-area').innerHTML += html
+                    form.message.value = ""
+
+                    var objDiv = document.getElementById('chatting-area')
+                    objDiv.scrollTop = objDiv.scrollHeight
+                }
+            }
+        }
+        var formData = new FormData(form)
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        formData.append('_id', selectedFriend._id)
+        ajax.send(formData)
+        return false
+    }
+
+    const connectSocket = () => {
+        var ajax = new XMLHttpRequest()
+        ajax.open('POST', '/connectSocket', true)
+
+        ajax.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText)
+
+                socketIO.on('messageReceived', messageObj => {
+                    console.log(selectedFriend)
+                    console.log(selectedFriend)
+                    if(selectedFriend != null && messageObj.from == selectedFriend._id) {
+                        var html = ''
+                        html += '<li class = "you">'
+                            html += '<p>' + messageObj.message + '</p>'
+                        html += '</li>'
+
+                        document.getElementById('chatting-area').innerHTML += html
+                        console.log(document.getElementById('chatting-area'))
+                        var objDiv = document.getElementById('chatting-area')
+                        objDiv.scrollTop = objDiv.Height
+                    }
+                })
+            }
+        }
+        var formData = new FormData()
+        formData.append('accessToken', localStorage.getItem('accessToken'))
+        ajax.send(formData)
+    }
+</script>
+<%- include ("includes/footer") %>

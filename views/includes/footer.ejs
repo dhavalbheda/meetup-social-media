@@ -1,0 +1,136 @@
+<footer>
+    <div class="container">
+        <div class="row">
+            Your Website &copy; <%= new Date().getFullYear() %>
+        </div>
+    </div>
+</footer>
+</div>
+<div class="modal fade" id="replyModal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Reply</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+
+			<div class="modal-body">
+				<form onsubmit="return doPostReply(this);">
+					<input type="hidden" name="postId">
+					<input type="hidden" name="commentId">
+					<textarea name="reply" placeholder="Post your reply"></textarea>
+					<button type="submit">Post</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<script src="/public/js/jquery-3.3.1.min.js"></script>
+<script src="/public/js/script.js"></script>
+<script src="/public/js/main.min.js"></script>
+<script src="/public/js/socket.io.js"></script>
+
+<script>
+    window.user = null
+    var socketIO = io("http://localhost:3000")
+
+    const getUser = () => {
+        if(localStorage.getItem('accessToken')) {
+            var ajax = new XMLHttpRequest()
+            ajax.open("POST", "/getUser", true)
+            ajax.onreadystatechange = function () {
+                if(this.readyState == 4 && this.status == 200) {
+                    
+                    var response = JSON.parse(this.responseText)
+                    
+
+                    if(response.status == "success") {
+                        window.user = response.data
+
+                        if(typeof isUpdateProfile !== "undefined" && isUpdateProfile) {
+                            showProfileData()
+                        }
+                        if(typeof isHomePage !== "undefined" && isHomePage) {
+                            showAddPost()
+                            showNewsfeed()
+                        }
+                        if(typeof isSearchResults !== "undefined" && isSearchResults) {
+                            showSearchResults()
+                        }
+                        if(typeof isFriends !== "undefined" && isFriends) {
+                            showFriends()
+                        }
+                        if(typeof isPages !== "undefined" && isPages) {
+                            getPages()   
+                        }
+                        if(typeof isPageDetail !== "undefined" && isPageDetail){
+                            getPageDetail()   
+                        }
+                        if(typeof isRightSidebar !== "undefined" && isRightSidebar){
+                            getMyPages()   
+                        }
+                        if(typeof isGroups !== "undefined" && isGroups){
+                            getGroups()   
+                        }
+                        if(typeof isGroupDetail !== "undefined" && isGroupDetail){
+                            getPageDetail()   
+                        }
+                        if(typeof isNotifications !== "undefined" && isNotifications){
+                            showNotifications()   
+                        }
+                    } else {
+                        localStorage.removeItem('accessToken')
+                    }
+                    showMainMenu()
+                }
+            }
+            var formData = new FormData()
+            formData.append('accessToken', localStorage.getItem('accessToken'))
+            ajax.send(formData)
+        } else {
+            showMainMenu()
+        }
+    } 
+
+    const showMainMenu = () => {
+        var html = ""
+
+        if(localStorage.getItem('accessToken')) {
+            html += '<li>'
+            html += '<a href="/pages">Pages</a>'
+            html += '</li>'
+            
+            html += '<li>'
+            html += '<a href="/groups">Groups</a>'
+            html += '</li>'
+            
+            html += '<li>'
+            html += '<a href="updateProfile">Profile</a>'
+            html += '</li>'
+            
+            html += '<li>'
+            html += '<a href="/logout" onclick="return doLogout();">Logout</a>'
+            html += '</li>'        
+        }
+        else {
+            html += '<li>'
+            html += '<a href="/login">Login</a>'
+            html += '</li>'
+
+            html += '<li>'
+            html += '<a href="/signup">Sign Up</a>'
+            html += '</li>'
+        }
+    document.getElementById('main-menu').innerHTML = html
+    }
+    const doLogout = () => {
+        localStorage.removeItem('accessToken')
+        return true
+    }
+    window.onload = () => getUser()
+    window.onerror = (file, line, error) => alert(file,line,error)
+</script>
+</body>
+</html>
