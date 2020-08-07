@@ -36,14 +36,14 @@ socketIO.on('connection', (socket) => {
 
 http.listen(port, () => {
     console.log(DBURL)
-    let db = null 
+    
 
     mongoClient.connect(DBURL, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             }, (error, client) => {
             console.log('Database Created')
-            db = client.db('social_media')
+           var db = client.db('social_media')
             console.log(db)
            
     
