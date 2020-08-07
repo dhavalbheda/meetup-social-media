@@ -35,7 +35,7 @@ socketIO.on('connection', (socket) => {
 })
 
 http.listen(port, () => {
-    console.log('Server Started')
+    console.log(DBURL)
     let db = null 
 
     mongoClient.connect(DBURL, {
@@ -43,6 +43,7 @@ http.listen(port, () => {
                 useUnifiedTopology: true,
             }, (error, client) => {
                db = client.db('social_media')
+               console.log(db)
             })
     
 
