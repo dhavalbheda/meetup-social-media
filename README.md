@@ -1,4 +1,4 @@
-# `Meet Up Socail Media`
+# `Meet Up Social Media`
 ![](https://img.shields.io/badge/Node.js-v12.17.0-green)
 ![](https://img.shields.io/badge/express-v4.17.1-red)
 ![](https://img.shields.io/badge/MongoDB-Atlas-brightgreen)
